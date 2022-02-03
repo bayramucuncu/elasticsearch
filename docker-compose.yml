@@ -24,17 +24,20 @@ services:
     volumes:
       - type: bind
         source: ./logstash/pipeline
-        target: /etc/logstash/conf.d/
+        target: /usr/share/logstash/pipeline/
       - type: bind
         source: ./logstash/config/logstash.yml
         target: /usr/share/logstash/config/logstash.yml
       - type: bind
+        source: ./logstash/config/pipelines.yml
+        target: /usr/share/logstash/config/pipelines.yml        
+      - type: bind
         source: ./logstash/drivers/postgresql-42.2.10.jar
         target: /usr/share/logstash/logstash-core/lib/jars/postgresql-42.2.10.jar
     ports:
+      - "9600:9600"    
       - "5000:5000/tcp"
       - "5000:5000/udp"
-      - "9600:9600"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
       PGSQL_JDBC_URL: "jdbc:postgresql://host.docker.internal:5432/b3"
@@ -42,6 +45,9 @@ services:
       PGSQL_JDBC_DRIVER_JAR_LOCATION: "/usr/share/logstash/logstash-core/lib/jars/postgresql-42.2.10.jar"
       PGSQL_JDBC_USERNAME: logstash_user
       PGSQL_JDBC_PASSWORD: logstash
+      PGSQL_DC_HOST: "jdbc:postgresql://postgres:5432/postgres"
+      PGSQL_DC_USER: ${POSTGRES_USER}
+      PGSQL_DC_PASS: ${POSTGRES_PASS}
       ELASTICSEARCH_HOST: http://elasticsearch:9200
     networks:
       - elknet   
@@ -62,9 +68,30 @@ services:
     depends_on:
       - elasticsearch
 
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASS}
+    ports:
+      - '5438:5432'
+    networks:
+      - elknet
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./postgresql/data/create_tables.sql
+        target: /docker-entrypoint-initdb.d/create_tables.sql
+      - type: bind
+        source: ./postgresql/data/insert_tables.sql
+        target: /docker-entrypoint-initdb.d/insert_tables.sql
 networks:
   elknet:
     driver: bridge
 
 volumes:
   elasticsearch:
+  postgres:
