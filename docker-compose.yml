@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   elasticsearch:
+    container_name: elk_elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VESION}
     volumes:
       - type: bind
@@ -20,6 +21,7 @@ services:
       - elknet
 
   logstash:
+    container_name: elk_logstash
     image: docker.elastic.co/logstash/logstash:${ELASTIC_VESION}
     volumes:
       - type: bind
@@ -55,6 +57,7 @@ services:
       - elasticsearch
       
   kibana:
+    container_name: elk_kibana
     image: docker.elastic.co/kibana/kibana:${ELASTIC_VESION}
     volumes:
       - type: bind
@@ -69,6 +72,7 @@ services:
       - elasticsearch
 
   postgres:
+    container_name: elk_postgres
     image: postgres:latest
     restart: always
     environment:
@@ -91,7 +95,10 @@ services:
 networks:
   elknet:
     driver: bridge
+    name: elk_net
 
 volumes:
   elasticsearch:
+    name: elk_data
   postgres:
+    name: elk_postgresql
