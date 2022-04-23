@@ -3,7 +3,7 @@ version: '3.8'
 services:
   elasticsearch:
     container_name: elk_elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VESION}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
     volumes:
       - type: bind
         source: ./elasticsearch/config/elasticsearch.yml
@@ -20,9 +20,23 @@ services:
     networks:
       - elknet
 
+  metricbeat:
+    container_name: elk_metricbeat
+    image: docker.elastic.co/beats/metricbeat:${ELASTIC_VERSION}
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+    - elasticsearch
+    volumes:
+      - type: bind
+        source: ./metricbeat/metricbeat.yml
+        target: /usr/share/metricbeat/metricbeat.yml
+    networks:
+      - elknet
+
   logstash:
     container_name: elk_logstash
-    image: docker.elastic.co/logstash/logstash:${ELASTIC_VESION}
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
     volumes:
       - type: bind
         source: ./logstash/pipeline
@@ -58,7 +72,7 @@ services:
       
   kibana:
     container_name: elk_kibana
-    image: docker.elastic.co/kibana/kibana:${ELASTIC_VESION}
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
     volumes:
       - type: bind
         source: ./kibana/config/kibana.yml
